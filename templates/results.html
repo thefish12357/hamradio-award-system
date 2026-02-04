@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>奖状申请结果</h2>
+
+<div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+    <h4>📊 日志分析报告</h4>
+    <p><strong>总记录数:</strong> {{ records_count }} 条通联记录</p>
+    {% if own_call %}<p><strong>主体呼号:</strong> {{ own_call }}</p>{% endif %}
+    {% for award_code, result in results.items() %}
+        {% if result.enhanced_records_count > 0 %}
+            {% if award_code == 'WAPC' %}
+                <p><strong>{{ result.award }}:</strong> 识别到 {{ result.enhanced_records_count }} 条记录的省份信息</p>
+            {% elif award_code == 'WACZ' %}
+                <p><strong>{{ result.award }}:</strong> 识别到 {{ result.enhanced_records_count }} 条中国大陆（DXCC 318）的记录</p>
+            {% elif award_code == 'DXCC' %}
+                <p><strong>{{ result.award }}:</strong> 识别到 {{ result.enhanced_records_count }} 个不同的DXCC实体</p>
+            {% else %}
+                <p><strong>{{ result.award }}:</strong> 通过呼号自动识别了 {{ result.enhanced_records_count }} 条记录的信息</p>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+</div>
+
+{% for award_code, result in results.items() %}
+<div class="award-card {% if result.eligible %}eligible{% else %}not-eligible{% endif %}">
+    <h3>{{ result.award }}</h3>
+    
+    {% if award_code == 'WAPC' %}
+        <!-- WAPC详细信息 -->
+        {% for condition in result.conditions %}
+            {% if 'connected_states' in condition and 'missing_states' in condition %}
+                <div style="margin: 10px 0; background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
+                    <h4>📋 WAPC详细信息</h4>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>已通联省份 ({{ condition.connected_states|length }}/{{ condition.target }}):</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            {% for state in condition.connected_states %}
+                                <span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 3px; font-size: 14px;">
+                                    {{ province_map.get(state, state) }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>未通联省份 ({{ condition.missing_states|length }}):</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            {% for state in condition.missing_states %}
+                                <span style="background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 3px; font-size: 14px;">
+                                    {{ province_map.get(state, state) }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% elif award_code == 'WACZ' %}
+        <!-- WACZ详细信息 -->
+        {% for condition in result.conditions %}
+            {% if 'connected_zones' in condition and 'missing_zones' in condition %}
+                <div style="margin: 10px 0; background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff;">
+                    <h4>📋 中国大陆0-9区通联详细信息</h4>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>已通联分区 ({{ condition.connected_zones|length }}/{{ condition.target }}):</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            {% for zone in condition.connected_zones %}
+                                <span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 3px; font-size: 14px;">
+                                    B{{ zone }}区
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>未通联分区 ({{ condition.missing_zones|length }}):</h5>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            {% for zone in condition.missing_zones %}
+                                <span style="background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 3px; font-size: 14px;">
+                                    B{{ zone }}区
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    
+    {% for condition in result.conditions %}
+    <div style="margin: 10px 0;">
+        <p>{{ condition.message }}</p>
+        <progress value="{{ condition.current }}" max="{{ condition.target }}"></progress>
+        <span>{{ condition.current }}/{{ condition.target }}</span>
+    </div>
+    {% endfor %}
+    
+    <p><strong>状态:</strong> 
+        {% if result.eligible %}
+        <span style="color: green;">✓ 符合申请条件</span>
+        {% else %}
+        <span style="color: red;">✗ 暂不符合条件</span>
+        {% endif %}
+    </p>
+    
+    {% if result.eligible %}
+    <div style="margin-top: 10px;">
+        {% if award_code == 'DXCC' %}
+            <!-- DXCC奖状支持多阶段选择 -->
+            <form action="/get_award" method="post" style="display: inline;">
+                <select name="award_code" style="padding: 8px; margin-right: 10px;">
+                    {% for condition in result.conditions %}
+                        {% if 'met_targets' in condition %}
+                            {% for target in condition.met_targets %}
+                                <option value="{{ award_code }}{{ target }}">DXCC{{ target }}奖状</option>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn" style="background: #007bff;">获取选择的奖状</button>
+            </form>
+        {% else %}
+            <!-- 其他奖状 -->
+            <form action="/get_award" method="post" style="display: inline;">
+                <input type="hidden" name="award_code" value="{{ award_code }}">
+                <button type="submit" class="btn" style="background: #007bff;">获取{{ result.award }}</button>
+            </form>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+<!-- 选择所有符合条件的奖状 -->
+<div style="margin-top: 20px; text-align: center; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+    <h4>批量申请奖状</h4>
+    <form action="/get_award" method="post">
+        <div style="margin-bottom: 15px;">
+            <select name="award_code" style="padding: 8px; width: 300px;">
+                <option value="">-- 选择单个奖状 --</option>
+                <!-- 所有符合条件的奖状 -->
+                {% for award_code, result in results.items() %}
+                    {% if result.eligible %}
+                        {% if award_code == 'DXCC' %}
+                            {% for condition in result.conditions %}
+                                {% if 'met_targets' in condition %}
+                                    {% for target in condition.met_targets %}
+                                        <option value="{{ award_code }}{{ target }}">{{ result.award }} ({{ target }}个实体)</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="{{ award_code }}">{{ result.award }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <option value="{{ award_code }}">{{ result.award }}</option>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                <option value="all">-- 选择所有符合条件的奖状 --</option>
+            </select>
+        </div>
+        <button type="submit" class="btn" style="background: #28a745; margin-right: 10px;">获取选择的奖状</button>
+        <button type="reset" class="btn" style="background: #6c757d;">重置</button>
+    </form>
+</div>
+
+<div style="margin-top: 20px; text-align: center;">
+    <a href="/upload" class="btn" style="background: #28a745;">重新上传文件</a>
+    <a href="/results" class="btn" style="background: #007bff; margin-left: 10px;">查看结果</a>
+    <a href="/" class="btn" style="background: #6c757d; margin-left: 10px;">返回首页</a>
+</div>
+{% endblock %}

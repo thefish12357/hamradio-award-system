@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>上传ADIF日志文件</h2>
+
+<form method="post" enctype="multipart/form-data">
+    <div style="margin: 20px 0;">
+        <label for="file">选择ADIF文件 (.adi):</label>
+        <input type="file" name="file" id="file" accept=".adi" required>
+    </div>
+    
+    <button type="submit" class="btn">上传并检查</button>
+</form>
+
+<div style="margin-top: 30px; background: #d4edda; padding: 15px; border-radius: 5px; border: 1px solid #c3e6cb;">
+    <h4 style="color: #155724;">数据安全说明：</h4>
+    <ul>
+        <li><strong>您的原始文件绝对安全</strong> - 系统只处理上传的临时副本</li>
+        <li><strong>不会修改本地文件</strong> - 您的原始ADIF文件保持不变</li>
+        <li><strong>临时文件自动清理</strong> - 检查完成后立即删除服务器上的副本</li>
+        <li><strong>不保存通联数据</strong> - 系统只统计结果，不存储具体通联记录</li>
+    </ul>
+</div>
+
+<div style="margin-top: 20px; background: #fff3cd; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba;">
+    <h4 style="color: #856404;">重要提示：</h4>
+    <ul>
+        <li style="color: #856404;">本系统只接受从 <strong><a href="https://lotw.arrl.org" target="_blank">lotw.arrl.org</a></strong> 下载的ADIF格式日志文件 (.adi)</li>
+        <li style="color: #856404;">文件大小限制：10MB</li>
+        <li style="color: #856404;">支持的字段：CALL, BAND, MODE, STATE, COUNTRY, GRIDSQUARE, CQZONE等</li>
+        <li style="color: #856404;">LOTW日志文件通常包含 "ProgramID: Logbook of the World" 等标识信息</li>
+    </ul>
+</div>
+{% endblock %}

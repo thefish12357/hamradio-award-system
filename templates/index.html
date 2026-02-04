@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>可申请的奖状</h2>
+
+{% for award in awards %}
+<div class="award-card">
+    <h3>{{ award.name }}</h3>
+    <p>{{ award.description }}</p>
+    <p><strong>奖状代码:</strong> {{ award.code }}</p>
+    <a href="/upload" class="btn">申请此奖状</a>
+</div>
+{% endfor %}
+
+<div style="margin-top: 30px; padding: 20px; background: #e9ecef; border-radius: 5px;">
+    <h3>使用说明</h3>
+    <ol>
+        <li>点击"上传日志"上传您的ADIF格式日志文件</li>
+        <li>系统会自动检查所有奖状的申请条件</li>
+        <li>符合条件的奖状将显示为绿色</li>
+        <li><strong>重要：系统只处理上传的副本，不会修改或删除您的原始文件</strong></li>
+    </ol>
+    
+    <h4 style="color: #28a745; margin-top: 15px;">数据安全保证：</h4>
+    <ul>
+        <li>✅ 您的原始文件安全保存在本地</li>
+        <li>✅ 服务器只处理临时副本</li>
+        <li>✅ 处理完成后立即删除临时文件</li>
+        <li>✅ 不会保存您的通联记录数据</li>
+    </ul>
+</div>
+{% endblock %}

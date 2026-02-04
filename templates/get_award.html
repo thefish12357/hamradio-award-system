@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>获取奖状</h2>
+
+<div class="award-card">
+    {% if award_code == 'all' %}
+        <h3>恭喜！您已获得以下所有奖状：</h3>
+        <ul>
+            {% for award in eligible_awards %}
+                <li>{{ award }}</li>
+            {% endfor %}
+        </ul>
+        
+        <form action="/generate_award/all" method="post">
+            <div style="margin: 20px 0;">
+                <h4>奖状格式选择：</h4>
+                <label>
+                    <input type="radio" name="format" value="pdf" checked> PDF格式
+                </label>
+                <label style="margin-left: 20px;">
+                    <input type="radio" name="format" value="png"> PNG格式
+                </label>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4>批量生成选项：</h4>
+                <label>
+                    <input type="checkbox" name="separate_files" value="1" checked> 每个奖状生成单独文件
+                </label>
+                <label style="margin-left: 20px;">
+                    <input type="checkbox" name="zip_all" value="1"> 打包为ZIP文件
+                </label>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4>奖状内容确认：</h4>
+                <p>您将生成 {{ eligible_awards|length }} 个奖状文件。点击下方按钮开始生成。</p>
+            </div>
+            
+            <button type="submit" class="btn" style="background: #007bff;">生成并下载所有奖状</button>
+            <a href="/results" class="btn" style="background: #6c757d; margin-left: 10px;">返回结果页面</a>
+        </form>
+    {% else %}
+        <h3>恭喜！您已获得以下奖状：</h3>
+        <p>奖状代码：{{ award_code }}</p>
+        {% if target_number %}
+            <p>阶段：{{ target_number }}个实体</p>
+        {% endif %}
+        
+        <form action="/generate_award/{{ award_code }}" method="post">
+            <div style="margin: 20px 0;">
+                <h4>奖状格式选择：</h4>
+                <label>
+                    <input type="radio" name="format" value="pdf" checked> PDF格式
+                </label>
+                <label style="margin-left: 20px;">
+                    <input type="radio" name="format" value="png"> PNG格式
+                </label>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4>奖状内容确认：</h4>
+                <p>请确认您的奖状信息是否正确，点击下方按钮生成奖状。</p>
+            </div>
+            
+            <button type="submit" class="btn" style="background: #007bff;">生成并下载奖状</button>
+            <a href="/results" class="btn" style="background: #6c757d; margin-left: 10px;">返回结果页面</a>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
