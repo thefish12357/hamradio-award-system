@@ -2,10 +2,10 @@ import re
 from typing import Tuple, List, Dict, Any
 from datetime import datetime
 
-# 正则表达式：匹配ADIF标签，如 <CALL:5>BG7QIW 或 <QSO_DATE:8>20230101
-TAG_RE = re.compile(r'<\s*(?P<tag>[A-Za-z0-9_/-]+)(?::(?P<len>\d+))?[^>]*>', re.I)
 
 
+
+TAG_RE = re.compile(r'<(?P<tag>[A-Za-z0-9_]+)(?::(?P<len>\d+))?(?::(?P<type>[A-Za-z]))?>', re.IGNORECASE)
 
 
 def normalize_text(text: str) -> str:
