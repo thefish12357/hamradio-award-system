@@ -1,0 +1,74 @@
+{
+  "background": {
+    "color": "rgb(205, 35, 35)",
+    "image": ""
+  },
+  "elements": [
+    {
+      "id": "element-0",
+      "type": "recipient",
+      "x": 0,
+      "y": 64.56942749023438,
+      "text": "领奖用户",
+      "font": "SimSun",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-1",
+      "type": "award-number",
+      "x": 0,
+      "y": 149.56942749023438,
+      "text": "奖状编号",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-2",
+      "type": "project",
+      "x": 611.1372162735196,
+      "y": 69.54516672028294,
+      "text": "奖状项目名称",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-3",
+      "type": "award-number",
+      "x": 481.111083984375,
+      "y": 385.0138931274414,
+      "text": "233",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-4",
+      "type": "date",
+      "x": 250.111083984375,
+      "y": 402.7916564941406,
+      "text": "生成日期",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    }
+  ],
+  "timestamp": "2026-02-05T15:27:14.707Z"
+}

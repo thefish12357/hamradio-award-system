@@ -1,0 +1,113 @@
+{
+  "background": {
+    "color": "",
+    "image": ""
+  },
+  "elements": [
+    {
+      "id": "element-0",
+      "type": "logo",
+      "x": 39.44444274902344,
+      "y": 44.45831298828125,
+      "text": "奖状标志",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-1",
+      "type": "title",
+      "x": 332.44444274902344,
+      "y": 113.45831298828125,
+      "text": "奖状标题",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-2",
+      "type": "description",
+      "x": 329.44444274902344,
+      "y": 376.45831298828125,
+      "text": "奖状说明文字",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-3",
+      "type": "project",
+      "x": 318.44444274902344,
+      "y": 219.45831298828125,
+      "text": "奖状项目名称",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-4",
+      "type": "recipient",
+      "x": 338.44444274902344,
+      "y": 296.45831298828125,
+      "text": "领奖用户",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-5",
+      "type": "award-number",
+      "x": 641.4444427490234,
+      "y": 61.45831298828125,
+      "text": "奖状编号",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-6",
+      "type": "date",
+      "x": 629.4444427490234,
+      "y": 504.45831298828125,
+      "text": "生成日期",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-7",
+      "type": "signer",
+      "x": 78.44444274902344,
+      "y": 490.45831298828125,
+      "text": "签发人",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    }
+  ],
+  "timestamp": "2026-02-06T00:03:04.012Z"
+}

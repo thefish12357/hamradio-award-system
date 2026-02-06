@@ -3,6 +3,10 @@ import os
 import tempfile
 import shutil
 import sys
+import json
+import uuid
+from datetime import datetime
+import base64
 
 # 添加src目录到Python路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
@@ -222,7 +226,9 @@ def show_results():
 @app.route('/design')
 def design_award():
     """奖状设计页面"""
-    return render_template('design.html')
+    # 传入可用奖状列表以供模板选择
+    awards = award_checker.get_available_awards()
+    return render_template('design.html', awards=awards)
 
 @app.route('/get_award', methods=['GET', 'POST'])
 def get_award():
@@ -311,12 +317,7 @@ def get_award():
 
 
     
-@app.route('/generate_award/<award_code>', methods=['POST'])
-def generate_award(award_code):
-    """生成奖状的API接口"""
-    # 这里可以添加生成奖状的逻辑
-    # 例如生成PDF或图片格式的奖状
-    return jsonify({'status': 'success', 'message': '奖状生成成功', 'award_code': award_code})
+
 
 @app.route('/api/check_award', methods=['POST'])
 def api_check_award():
@@ -328,9 +329,282 @@ def api_check_award():
     result = award_checker.check_single_award(award_name, records)
     return jsonify(result)
 
+@app.route('/save_template', methods=['POST'])
+def save_template():
+    """保存奖状模板"""
+    try:
+        # 支持 multipart/form-data 提交：包含字段 template (json字符串)、award_code，以及可选的 background_file、logo_file
+        award_code = request.form.get('award_code')
+        template_json = request.form.get('template')
+        if not award_code:
+            return jsonify({'success': False, 'message': '缺少 award_code'})
+        if not template_json:
+            return jsonify({'success': False, 'message': '缺少 template 数据'})
+
+        try:
+            template_data = json.loads(template_json)
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'模板 JSON 解析错误: {e}'})
+
+        # 创建奖状对应的文件夹
+        base_dir = os.path.dirname(__file__)
+        templates_dir = os.path.join(base_dir, 'award_templates')
+        backgrounds_dir = os.path.join(base_dir, 'static', 'award_backgrounds')
+        logos_dir = os.path.join(base_dir, 'static', 'award_logos')
+
+        for d in (templates_dir, backgrounds_dir, logos_dir):
+            if not os.path.exists(d):
+                os.makedirs(d)
+
+        # 每个奖状使用自己的子目录（按 award_code）
+        award_template_dir = os.path.join(templates_dir, award_code)
+        award_background_dir = os.path.join(backgrounds_dir, award_code)
+        award_logo_dir = os.path.join(logos_dir, award_code)
+        for d in (award_template_dir, award_background_dir, award_logo_dir):
+            if not os.path.exists(d):
+                os.makedirs(d)
+
+        # 保存模板文件为 template.json
+        template_path = os.path.join(award_template_dir, 'template.json')
+        with open(template_path, 'w', encoding='utf-8') as f:
+            json.dump(template_data, f, ensure_ascii=False, indent=2)
+
+        # 处理背景文件和 logo 文件
+        # 背景文件字段名: background_file
+        if 'background_file' in request.files:
+            bg = request.files['background_file']
+            if bg and bg.filename:
+                bg_filename = bg.filename
+                bg_path = os.path.join(award_background_dir, bg_filename)
+                bg.save(bg_path)
+                # 在模板数据中保存相对路径（相对于 app 根目录）
+                template_data.setdefault('background', {})
+                # 使用 static 子目录可通过 url_for 访问
+                template_data['background']['image'] = url_for('static', filename=f"award_backgrounds/{award_code}/{bg_filename}")
+                # 更新保存后的 template.json
+                with open(template_path, 'w', encoding='utf-8') as f:
+                    json.dump(template_data, f, ensure_ascii=False, indent=2)
+
+        # logo 文件字段名: logo_file
+        if 'logo_file' in request.files:
+            lg = request.files['logo_file']
+            if lg and lg.filename:
+                lg_filename = lg.filename
+                lg_path = os.path.join(award_logo_dir, lg_filename)
+                lg.save(lg_path)
+                # 可在模板数据中记录 logo 路径
+                template_data.setdefault('logo', {})
+                template_data['logo']['path'] = url_for('static', filename=f"award_logos/{award_code}/{lg_filename}")
+                with open(template_path, 'w', encoding='utf-8') as f:
+                    json.dump(template_data, f, ensure_ascii=False, indent=2)
+
+        return jsonify({'success': True, 'award_code': award_code})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/generate_award/<award_code>', methods=['POST'])
+def generate_award(award_code):
+    """生成奖状的API接口"""
+    try:
+        # 获取表单数据
+        format = request.form.get('format', 'html')
+        
+        # 获取会话中的结果数据
+        results_json = session.get('results', '{}')
+        if results_json == '{}':
+            return jsonify({'status': 'error', 'message': '请先上传日志文件'})
+        
+        # 解析结果数据
+        results = json.loads(results_json)
+        
+        # 获取主体呼号
+        own_call = session.get('own_call')
+        
+        # 获取当前日期
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        # 生成唯一的奖状编号
+        award_number = f'AWARD-{str(uuid.uuid4())[:8].upper()}'
+        
+        # 获取对应奖状的模板数据（按 award_code 子目录查找 template.json）
+        base_dir = os.path.dirname(__file__)
+        template_path = os.path.join(base_dir, 'award_templates', award_code, 'template.json')
+        template_data = None
+        if os.path.exists(template_path):
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template_data = json.load(f)
+        
+        # 生成HTML奖状
+        html_content = generate_award_html(award_code, own_call, award_number, current_date, template_data)
+        
+        # 生成临时文件路径
+        temp_dir = tempfile.gettempdir()
+        filename = f'award_{award_code}_{own_call}.html'
+        filepath = os.path.join(temp_dir, filename)
+        
+        # 保存HTML文件
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        # 返回奖状文件路径
+        return jsonify({'status': 'success', 'message': '奖状生成成功', 'award_code': award_code, 'file_path': filepath})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
+
+@app.route('/delete_asset', methods=['POST'])
+def delete_asset():
+    """删除已保存的模板资产（背景或 logo）"""
+    try:
+        data = request.get_json()
+        award_code = data.get('award_code')
+        asset_type = data.get('asset_type')  # 'background' or 'logo'
+        filename = data.get('filename')
+        if not award_code or not asset_type or not filename:
+            return jsonify({'success': False, 'message': '缺少参数'})
+
+        base_dir = os.path.dirname(__file__)
+        if asset_type == 'background':
+            path = os.path.join(base_dir, 'static', 'award_backgrounds', award_code, filename)
+            static_rel = f"award_backgrounds/{award_code}/{filename}"
+        elif asset_type == 'logo':
+            path = os.path.join(base_dir, 'static', 'award_logos', award_code, filename)
+            static_rel = f"award_logos/{award_code}/{filename}"
+        else:
+            return jsonify({'success': False, 'message': '未知的 asset_type'})
+
+        if os.path.exists(path):
+            os.remove(path)
+        else:
+            return jsonify({'success': False, 'message': '文件不存在'})
+
+        # 如果模板存在，尝试更新 template.json 去除引用
+        template_path = os.path.join(base_dir, 'award_templates', award_code, 'template.json')
+        if os.path.exists(template_path):
+            try:
+                with open(template_path, 'r', encoding='utf-8') as f:
+                    template_data = json.load(f)
+                changed = False
+                if asset_type == 'background' and template_data.get('background'):
+                    img = template_data['background'].get('image','')
+                    if static_rel in img:
+                        template_data['background']['image'] = ''
+                        changed = True
+                if asset_type == 'logo' and template_data.get('logo'):
+                    lp = template_data['logo'].get('path','')
+                    if static_rel in lp:
+                        template_data['logo']['path'] = ''
+                        changed = True
+                if changed:
+                    with open(template_path, 'w', encoding='utf-8') as f:
+                        json.dump(template_data, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+def generate_award_html(award_code, recipient, award_number, date, template_data):
+    """生成HTML格式的奖状"""
+    # 默认背景设置
+    background_color = '#ffffff'
+    background_image = ''
+    
+    # 如果有模板数据，使用模板数据
+    if template_data and template_data['background']:
+        background_color = template_data['background'].get('color', '#ffffff')
+        background_image = template_data['background'].get('image', '')
+    
+    # 生成元素HTML
+    elements_html = ''
+    if template_data and template_data['elements']:
+        for element in template_data['elements']:
+            # 替换占位符内容
+            text = element['text']
+            if element['type'] == 'recipient' and recipient:
+                text = recipient
+            elif element['type'] == 'award-number':
+                text = award_number
+            elif element['type'] == 'date':
+                text = date
+            elif element['type'] == 'project':
+                text = award_code
+            
+            # 设置样式
+            font = element.get('font', 'Arial')
+            font_size = element.get('size', '16')
+            color = element.get('color', '#000000')
+            bold = 'bold' if element.get('bold', False) else 'normal'
+            italic = 'italic' if element.get('italic', False) else 'normal'
+            underline = 'underline' if element.get('underline', False) else 'none'
+            
+            # 设置位置
+            x = element['x']
+            y = element['y']
+            
+            # 生成元素HTML
+            elements_html += f'''<div style="position: absolute; left: {x}px; top: {y}px; font-family: {font}; font-size: {font_size}px; color: {color}; font-weight: {bold}; font-style: {italic}; text-decoration: {underline};">{text}</div>'''
+    else:
+        # 默认元素布局
+        elements_html = f'''<div style="position: absolute; left: 200px; top: 100px; font-family: 'Microsoft YaHei'; font-size: 48px; color: #333; font-weight: bold; text-align: center; width: 400px;">奖状</div>
+        <div style="position: absolute; left: 150px; top: 200px; font-family: 'Microsoft YaHei'; font-size: 24px; color: #666; text-align: center; width: 500px;">祝贺</div>
+        <div style="position: absolute; left: 200px; top: 250px; font-family: 'Microsoft YaHei'; font-size: 36px; color: #d35400; font-weight: bold; text-align: center; width: 400px;">{recipient}</div>
+        <div style="position: absolute; left: 150px; top: 320px; font-family: 'Microsoft YaHei'; font-size: 24px; color: #666; text-align: center; width: 500px;">获得</div>
+        <div style="position: absolute; left: 200px; top: 370px; font-family: 'Microsoft YaHei'; font-size: 32px; color: #27ae60; font-weight: bold; text-align: center; width: 400px;">{award_code}</div>
+        <div style="position: absolute; left: 150px; top: 430px; font-family: 'Microsoft YaHei'; font-size: 18px; color: #666; text-align: center; width: 500px;">奖状编号：{award_number}</div>
+        <div style="position: absolute; left: 150px; top: 460px; font-family: 'Microsoft YaHei'; font-size: 18px; color: #666; text-align: center; width: 500px;">颁发日期：{date}</div>'''
+    
+    # 生成完整的HTML
+    html_content = f'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>奖状 - {award_code}</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }}
+        #award-container {{
+            width: 842px;
+            height: 595px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: {background_color};
+            {f'background-image: {background_image};' if background_image else ''}
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }}
+    </style>
+</head>
+<body>
+    <div id="award-container">
+        {elements_html}
+    </div>
+</body>
+</html>'''
+    
+    return html_content
+
 if __name__ == '__main__':
     # 确保模板目录存在
     if not os.path.exists('templates'):
         os.makedirs('templates')
+    
+    # 确保奖状模板目录存在
+    template_dir = os.path.join(os.path.dirname(__file__), 'award_templates')
+    if not os.path.exists(template_dir):
+        os.makedirs(template_dir)
+    # 确保用于存放背景和 logo 的 static 子目录存在
+    static_bg = os.path.join(os.path.dirname(__file__), 'static', 'award_backgrounds')
+    static_logo = os.path.join(os.path.dirname(__file__), 'static', 'award_logos')
+    for d in (static_bg, static_logo):
+        if not os.path.exists(d):
+            os.makedirs(d)
     
     app.run(debug=True, host='127.0.0.1', port=5000)

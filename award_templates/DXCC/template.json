@@ -1,0 +1,74 @@
+{
+  "background": {
+    "color": "rgb(63, 8, 8)",
+    "image": ""
+  },
+  "elements": [
+    {
+      "id": "element-0",
+      "type": "logo",
+      "x": 34.533486175738844,
+      "y": 11.315678821429668,
+      "text": "",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-1",
+      "type": "description",
+      "x": 7.98837312819627,
+      "y": 172.5876918789339,
+      "text": "奖状说明文字",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-2",
+      "type": "description",
+      "x": 4.395729714913936,
+      "y": 102.93709201042184,
+      "text": "奖状说明文字",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-3",
+      "type": "recipient",
+      "x": 9.788341159388912,
+      "y": 141.21234207940884,
+      "text": "领奖用户",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    },
+    {
+      "id": "element-4",
+      "type": "award-number",
+      "x": 4.722462071591032,
+      "y": 31.00789154723578,
+      "text": "奖状编号",
+      "font": "Arial",
+      "size": "16",
+      "color": "#000000",
+      "bold": false,
+      "italic": false,
+      "underline": false
+    }
+  ],
+  "timestamp": "2026-02-06T04:59:52.227Z"
+}

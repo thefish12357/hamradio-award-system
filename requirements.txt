@@ -1,3 +1,5 @@
 pytest
 flask
 werkzeug
+pillow
+reportlab
