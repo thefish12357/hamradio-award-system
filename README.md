@@ -4,8 +4,6 @@
 
 使用trae生成，使用请注意代码准确
 
-### 因为我不会合并分支，主要修改在master上，main只作为上传测试用，master上的代码才是最新的
-
 ## 功能特性
 
 - **ADIF 文件解析**：支持解析 LOTW 导出的详细版本 ADIF 日志文件，处理大文件更高效
@@ -89,6 +87,7 @@ python app.py
 感谢以下业余无线电爱好者提供的测试数据和支持：
 
 - **BD4SDO**
+- **BG5UWQ**
 - **BG7LFX**
 - **BG7QIW**
 - **BG7XWF**
@@ -101,5 +100,4 @@ python app.py
 
 
 MIT License
-
 
